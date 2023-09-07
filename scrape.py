@@ -1,5 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
+
 GRANDSLAMS = ["Australian Open", "French Open", "Wimbledon Championships", "US Open"]
 CURRENT_YEAR = 2023
 YEARS = 45
@@ -59,9 +61,8 @@ for i in table[1:]:
             continue
         
         if th_tag.text == "Born":
-            age = list(td_tag)[2].text
-            age = age.strip(" ")[5:-1]
-            
+            age = td_tag.find("span", class_= "noprint ForceAgeToShow").text
+            age = age.strip(" ")[1:-1][4:]
             
             temp.append(age)
 
@@ -94,9 +95,11 @@ for i in table[1:]:
     data.append(temp)
                 
 
-data.sort(key=lambda x:x[2])
-data.insert(0, ["Name", "age", "Grand Slam Wins"])
+data.sort(key=lambda x:x[2], reverse=True)
 for i in data:
     print(i)
 
-    
+df = pd.DataFrame(data)
+
+df.to_csv("Tennis_Players_Stats.csv", index=False, header=["Name", "age", "Grand Slam Wins"])
+
