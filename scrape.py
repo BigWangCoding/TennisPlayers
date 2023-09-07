@@ -1,5 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
+GRANDSLAMS = ["Australian Open", "French Open", "Wimbledon Championships", "US Open"]
+CURRENT_YEAR = 2023
+YEARS = 45
+
+TOTAL_YEARS = CURRENT_YEAR - YEARS
 
 source = requests.get("https://en.wikipedia.org/wiki/List_of_male_singles_tennis_players").text
 
@@ -7,11 +12,19 @@ soup = BeautifulSoup(source, "html5lib")
 
 table = soup.find("table")
 
-data = [["Name", "website", "age"]]
+data = []
 
 table = table.find_all("tr")
 
-for i in table[1:3]:
+for i in table[1:]:
+    try:
+        birth_year = int(list(i)[3].text)
+    except:
+        continue
+
+    if birth_year < TOTAL_YEARS:
+        continue
+
     temp = []
     try:
         if list(i)[5].text.isnumeric():
@@ -24,16 +37,66 @@ for i in table[1:3]:
     id = i.td.span.span.span.a["href"]
     website = f"https://en.wikipedia.org{id}"
 
-    temp.append(website)
-
-    data.append(temp)
-
     player_website = requests.get(website).text
     soup = BeautifulSoup(player_website, "html5lib")
+    
+    
+    player_info = soup.find("table", class_="infobox vcard")
 
-    print(soup.prettify())
-print(data)
+    player_table = player_info.find_all("tr")
+    totalWins = 0
+    continueCount = 0
 
+    for info in player_table:
+        if continueCount > 0:
+            continueCount -= 1
+            continue
+
+        th_tag = info.th
+        
+        td_tag = info.td
+        if not th_tag:
+            continue
+        
+        if th_tag.text == "Born":
+            age = list(td_tag)[2].text
+            age = age.strip(" ")[5:-1]
+            
+            
+            temp.append(age)
+
+        if th_tag.text == "Grand Slam doubles results":
+            continueCount = 4
+            continue
+        try:
+            name = (td_tag.a["title"]).split(" ")
+            name = f"{name[1]} {name[2]}"
+            
+            if name in GRANDSLAMS:
+                       
+                try:
+                    if td_tag.b.text == "W":
+                        find = td_tag.find_all("a")
+                        wins = len(list(find))
+                        totalWins += wins
+
+                except:
+                    pass
+        except:
+            pass
+        
 
     
+    temp.append(totalWins)
+
+    #temp.append(website)
+
+    data.append(temp)
+                
+
+data.sort(key=lambda x:x[2])
+data.insert(0, ["Name", "age", "Grand Slam Wins"])
+for i in data:
+    print(i)
+
     
