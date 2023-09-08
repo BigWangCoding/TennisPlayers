@@ -31,13 +31,21 @@ for i in table[1:]:
     try:
         if list(i)[5].text.isnumeric():
             continue
-        name_of_player = list(i)[1].span["data-sort-value"]
+        name_of_player = i.find("a").text
+
+        print(name_of_player)
+        
+        
     except TypeError:
         continue
     temp.append(name_of_player)
 
-    id = i.td.span.span.span.a["href"]
-    website = f"https://en.wikipedia.org{id}"
+
+    try:
+        id = i.td.span.span.span.a["href"]
+        website = f"https://en.wikipedia.org{id}"
+    except:
+        continue
 
     player_website = requests.get(website).text
     soup = BeautifulSoup(player_website, "html5lib")
@@ -101,5 +109,4 @@ for i in data:
 
 df = pd.DataFrame(data)
 
-df.to_csv("Tennis_Players_Stats.csv", index=False, header=["Name", "age", "Grand Slam Wins"])
-
+df.to_csv("Tennis_Players_Stats.csv", index=False, header=["Name", "age", "Grand Slam Wins"])    
